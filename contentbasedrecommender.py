@@ -31,6 +31,25 @@ movies_list["score"] = movies_list.apply(weighted_rating, axis=1)
 movies_list = movies_list.sort_values("score", ascending=False)
 
 popular_movies = dataset.sort_values("popularity", ascending=False)
+
+popular_movies["genres"] = popular_movies["genres"].apply(literal_eval)
+movies_list["genres"] = movies_list["genres"].apply(literal_eval)
+
+
+def popular_movies_list():
+    return (
+        popular_movies[["id", "title_x", "genres"]].head(10).to_dict(orient="records")
+    )
+
+
+def top_rated_movies():
+    return (
+        movies_list[["id", "title_x", "genres", "score"]]
+        .head(10)
+        .to_dict(orient="records")
+    )
+
+
 top_budget_movies = dataset.sort_values("budget", ascending=False)
 
 
@@ -140,4 +159,4 @@ def get_recommendations_features(title, cosine_sim=cosine_sim2):
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
     sim_scores = sim_scores[1:11]
     movie_indices = [i[0] for i in sim_scores]
-    return dataset["title_x"].iloc[movie_indices]
+    return dataset[["id", "title_x"]].iloc[movie_indices].to_dict(orient="records")
