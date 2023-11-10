@@ -67,16 +67,16 @@ cosine_sim = linear_kernel(
     tfidf_matrix, tfidf_matrix
 )  # Caculating the cosine similarties between any two overview in the dataset
 
-indices = pd.Series(dataset.index, index=dataset["title_x"]).drop_duplicates()
+indices = pd.Series(dataset.index, index=dataset["id"])
 
 
-def get_recommendations_overview(title, cosine_sim=cosine_sim):
-    idx = indices[title]
+def get_recommendations_overview(id, cosine_sim=cosine_sim):
+    idx = indices[id]
     sim_scores = list(enumerate(cosine_sim[idx]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
     sim_scores = sim_scores[1:11]
     movie_indices = [i[0] for i in sim_scores]
-    return dataset["title_x"].iloc[movie_indices]
+    return dataset[["id", "title_x"]].iloc[movie_indices].to_dict(orient="records")
 
 
 # Recommender using keywords as well as cast director etc
@@ -150,11 +150,11 @@ count_matrix = count.fit_transform(dataset["soup"])
 
 cosine_sim2 = cosine_similarity(count_matrix, count_matrix)
 dataset = dataset.reset_index()
-indices = pd.Series(dataset.index, index=dataset["title_x"])
+indices2 = pd.Series(dataset.index, index=dataset["title_x"])
 
 
 def get_recommendations_features(title, cosine_sim=cosine_sim2):
-    idx = indices[title]
+    idx = indices2[title]
     sim_scores = list(enumerate(cosine_sim[idx]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
     sim_scores = sim_scores[1:11]

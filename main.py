@@ -1,12 +1,11 @@
 from typing import Union
-
-# import contentbasedrecommender as recommender
+import contentbasedrecommender as recommender
 from fastapi import FastAPI
 
 app = FastAPI()
 
-# popular_movies_data = recommender.popular_movies_list()
-# top_rated_movies_data = recommender.top_rated_movies()
+popular_movies_data = recommender.popular_movies_list()
+top_rated_movies_data = recommender.top_rated_movies()
 
 
 @app.get("/")
@@ -17,16 +16,21 @@ def read_root():
     }
 
 
-# @app.get("/popular")
-# def popular_movies():
-#     return popular_movies_data
+@app.get("/popular")
+def popular_movies():
+    return popular_movies_data
 
 
-# @app.get("/toprated")
-# def top_rated_movies():
-#     return top_rated_movies_data
+@app.get("/toprated")
+def top_rated_movies():
+    return top_rated_movies_data
 
 
-# @app.get("/recommendation/{movie_title}")
-# def return_recommendations(movie_title: Union[str, None]):
-#     return recommender.get_recommendations_features(movie_title)
+@app.get("/recommendation/{movie_title}")
+def return_recommendations(movie_title: Union[str, None]):
+    return recommender.get_recommendations_features(movie_title)
+
+
+@app.get("/recommendation/overview/{movie_id}")
+def return_recommendations_using_overview(movie_id: int):
+    return recommender.get_recommendations_overview(movie_id)
