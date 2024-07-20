@@ -1,126 +1,25 @@
+import sqlite3
 import pandas as pd
-from sqlalchemy import create_engine, Column, Integer, String, Float, Text, JSON, Date
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from ast import literal_eval
-import numpy as np
 
-# Define database location
-DATABASE_URI = 'sqlite:///movies.db'
+# Paths to the CSV files
+credits_csv_path = "./TMDBDataset/tmdb_5000_movies.csv"
+movies_csv_path = "./TMDBDataset/tmdb_5000_credits.csv"
 
-# Create a new database connection
-engine = create_engine(DATABASE_URI)
-Base = declarative_base()
+# Load the CSV files into pandas DataFrames
+credits_df = pd.read_csv(credits_csv_path)
+movies_df = pd.read_csv(movies_csv_path)
 
-# Define Movies table
-class Movie(Base):
-    __tablename__ = 'movies'
-    id = Column(Integer, primary_key=True)
-    title = Column(String)
-    budget = Column(Float)
-    genres = Column(JSON)
-    homepage = Column(String)
-    keywords = Column(JSON)
-    original_language = Column(String)
-    original_title = Column(String)
-    overview = Column(Text)
-    popularity = Column(Float)
-    production_companies = Column(JSON)
-    production_countries = Column(JSON)
-    release_date = Column(Date)
-    revenue = Column(Float)
-    runtime = Column(Float)
-    spoken_languages = Column(JSON)
-    status = Column(String)
-    tagline = Column(String)
-    vote_average = Column(Float)
-    vote_count = Column(Integer)
+# Path to the SQLite database file
+sqlite_db_path = "./movies.db"
 
-# Define Credits table
-class Credit(Base):
-    __tablename__ = 'credits'
-    movie_id = Column(Integer, primary_key=True)
-    title = Column(String)
-    cast = Column(JSON)
-    crew = Column(JSON)
+# Connect to the SQLite database (it will be created if it doesn't exist)
+conn = sqlite3.connect(sqlite_db_path)
 
-# Create tables
-Base.metadata.create_all(engine)
+# Save the DataFrames to the SQLite database
+credits_df.to_sql("tmdb_credits", conn, if_exists="replace", index=False)
+movies_df.to_sql("tmdb_movies", conn, if_exists="replace", index=False)
 
-# Create a session
-Session = sessionmaker(bind=engine)
-session = Session()
+# Close the connection
+conn.close()
 
-# Load data from CSV
-movies_df = pd.read_csv('./TMDBDataset/tmdb_5000_movies.csv')
-credits_df = pd.read_csv('./TMDBDataset/tmdb_5000_credits.csv')
-
-# Fill NaN values with appropriate defaults
-movies_df.fillna({
-    'budget': 0.0,
-    'genres': '[]',
-    'homepage': '',
-    'keywords': '[]',
-    'original_language': '',
-    'original_title': '',
-    'overview': '',
-    'popularity': 0.0,
-    'production_companies': '[]',
-    'production_countries': '[]',
-    'release_date': '1970-01-01',
-    'revenue': 0.0,
-    'runtime': 0.0,
-    'spoken_languages': '[]',
-    'status': '',
-    'tagline': '',
-    'vote_average': 0.0,
-    'vote_count': 0
-}, inplace=True)
-
-# Process and insert movies data
-for index, row in movies_df.iterrows():
-    movie = Movie(
-        id=row['id'],
-        title=row['title'],
-        budget=row['budget'],
-        genres=literal_eval(row['genres']),
-        homepage=row['homepage'],
-        keywords=literal_eval(row['keywords']),
-        original_language=row['original_language'],
-        original_title=row['original_title'],
-        overview=row['overview'],
-        popularity=row['popularity'],
-        production_companies=literal_eval(row['production_companies']),
-        production_countries=literal_eval(row['production_countries']),
-        release_date=pd.to_datetime(row['release_date']),
-        revenue=row['revenue'],
-        runtime=row['runtime'],
-        spoken_languages=literal_eval(row['spoken_languages']),
-        status=row['status'],
-        tagline=row['tagline'],
-        vote_average=row['vote_average'],
-        vote_count=row['vote_count']
-    )
-    session.add(movie)
-
-# Fill NaN values in credits data
-credits_df.fillna({
-    'cast': '[]',
-    'crew': '[]'
-}, inplace=True)
-
-# Process and insert credits data
-for index, row in credits_df.iterrows():
-    credit = Credit(
-        movie_id=row['movie_id'],
-        title=row['title'],
-        cast=literal_eval(row['cast']),
-        crew=literal_eval(row['crew'])
-    )
-    session.add(credit)
-
-# Commit the session
-session.commit()
-
-# Close the session
-session.close()
+print(f"Data has been successfully saved to {sqlite_db_path}")
